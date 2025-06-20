@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        
+        .game-card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .game-header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        
+        .game-body {
+            padding: 2rem;
+        }
+        
+        .game-title {
+            color: var(--dark);
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .guess-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .guess-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        
+        .guess-btn {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .guess-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .guess-btn:active {
+            transform: translateY(0);
+        }
+        
+        .result-container {
+            margin-top: 2rem;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .result-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .success {
+            color: var(--success);
+        }
+        
+        .error {
+            color: var(--error);
+        }
+        
+        .emoji-result {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: bounce 0.5s;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .attempts-counter {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            border-radius: 50%;
+            animation: confetti-fall 3s linear forwards;
+        }
+        
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(500px) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-card">
+        <div class="game-header">
+            Number Guessing Game
+        </div>
+        <div class="game-body">
+            <h2 class="game-title">Guess a number between 1 and 6</h2>
+            
+            <input 
+                type="number" 
+                id="guessInput" 
+                class="guess-input" 
+                placeholder="Enter your guess..."
+                min="1"
+                max="6"
+            >
+            
+            <button id="guessBtn" class="guess-btn" onclick="handleGuess()">
+                Guess
+            </button>
+            
+            <div class="result-container" id="resultContainer">
+                <!-- Results will be shown here -->
+            </div>
+            
+            <div class="attempts-counter" id="attemptsCounter">
+                Attempts: <span id="attempts">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        
+        let secretNumber = Math.floor(Math.random() * 6) + 1;
+        let attempts = 0;
+        
+        console.log(secretNumber);
+
+        function handleGuess() {
+            const guessInput = document.getElementById('guessInput');
+            const resultContainer = document.getElementById('resultContainer');
+            const attemptsSpan = document.getElementById('attempts');
+            
+            // Validate input
+            if (!guessInput.value || guessInput.value < 1 || guessInput.value > 6) {
+                resultContainer.innerHTML = `
+                    <p class="result-text error">Please enter a number between 1 and 6</p>
+                `;
+                return;
+            }
+            
+            attempts++;
+            attemptsSpan.textContent = attempts;
+            
+            const userGuess = parseInt(guessInput.value);
+            
+            if (userGuess === secretNumber) {
+                // Correct guess
+                resultContainer.innerHTML = `
+                    <div class="emoji-result">🎉</div>
+                    <p class="result-text success">Congratulations! You guessed it right!</p>
+                `;
+                
+                // Create confetti effect
+                createConfetti();
+                
+                // Disable input and button
+                guessInput.disabled = true;
+                document.getElementById('guessBtn').disabled = true;
+                
+                // Change button to play again
+                setTimeout(() => {
+                    document.getElementById('guessBtn').textContent = 'Play Again';
+                    document.getElementById('guessBtn').onclick = resetGame;
+                }, 1000);
+            } else {
+                // Wrong guess
+                const hint = userGuess < secretNumber ? 'higher' : 'lower';
+                resultContainer.innerHTML = `
+                    <div class="emoji-result">🤔</div>
+                    <p class="result-text error">Wrong guess! Try a ${hint} number.</p>
+                `;
+            }
+            
+            // Clear input
+            guessInput.value = '';
+            guessInput.focus();
+        }
+        
+        function resetGame() {
+            secretNumber = Math.floor(Math.random() * 6) + 1;
+            attempts = 0;
+            
+            document.getElementById('attempts').textContent = '0';
+            document.getElementById('resultContainer').innerHTML = '';
+            document.getElementById('guessInput').disabled = false;
+            document.getElementById('guessBtn').disabled = false;
+            document.getElementById('guessBtn').textContent = 'Guess';
+            document.getElementById('guessBtn').onclick = handleGuess;
+        }
+        
+        function createConfetti() {
+            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                document.body.appendChild(confetti);
+                
+                // Remove confetti after animation
+                setTimeout(() => {
+                    confetti.remove();
+                }, 3000);
+            }
+        }
+        
+        // Handle Enter key press
+        document.getElementById('guessInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleGuess();
+            }
+        });
+    </script>
+</body>
+</html>
